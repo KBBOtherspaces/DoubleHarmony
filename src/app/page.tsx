@@ -112,17 +112,24 @@ return (
         left: `${10 + scrollPercentage * 0.8}%`,
       }}
     />
+    
+    {/* DOUBLE HARMONY Title */}
+    <div className="absolute top-4 left-0 right-0 text-center z-20">
+      <h1 className="font-sans font-bold text-6xl md:text-8xl tracking-wide" 
+          style={{
+            color: 'transparent',
+            WebkitTextStroke: '2px white',
+            textShadow: '0 4px 8px rgba(0,0,0,0.2)'
+          }}>
+        DOUBLE HARMONY
+      </h1>
+    </div>
 
-    <div className="container mx-auto max-w-4xl px-4 py-8 relative z-10">
+    <div className="container mx-auto max-w-4xl px-4 py-8 relative z-10 mt-24">
       {/* Removed the white background and made chat container transparent */}
       <div className="backdrop-blur-sm rounded-xl overflow-hidden transition-all duration-300 border border-white border-opacity-20">
         <div className="h-[700px] flex flex-col">
-          {/* Modified header with transparent background */}
-          <div className="p-4 bg-transparent border-b border-white border-opacity-20">
-            <h1 className="text-2xl font-semibold text-white text-shadow">AI Poet Chat</h1>
-            <p className="text-sm text-white text-opacity-80">Chat with Whomp, the French AI poet</p>
-          </div>
-
+          {/* Removed the header with title since we now have the big title at the top */}
           <div className="flex-1 overflow-y-auto p-4 space-y-6" ref={chatContainerRef}>
             {messages.slice(1).map((message) => (
               <div
