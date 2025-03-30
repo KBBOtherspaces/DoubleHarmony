@@ -8,6 +8,7 @@ interface Message {
   content: string;
   timestamp?: number;
   id: string;
+  lines?: Array<{text: string, visible: boolean, position: number}>;
 }
 
 export default function Home() {
@@ -26,6 +27,7 @@ export default function Home() {
   const chunksRef = useRef<Blob[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const animationTimersRef = useRef<number[]>([]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -34,6 +36,13 @@ export default function Home() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Clean up animation timers on unmount
+  useEffect(() => {
+    return () => {
+      animationTimersRef.current.forEach(timer => clearTimeout(timer));
+    };
+  }, []);
 
   // Calculate scroll percentage for sky gradient
   useEffect(() => {
@@ -52,6 +61,90 @@ export default function Home() {
       return () => chatContainer.removeEventListener('scroll', handleScroll);
     }
   }, []);
+
+  // Process assistant messages to create animated lines
+  const processAssistantMessage = (content: string) => {
+    // Split content by newlines or periods followed by space
+    const textLines = content
+      .split(/(?:\n+|(?<=\.)\s+)/)
+      .filter(line => line.trim().length > 0)
+      .map(line => ({
+        text: line.trim(),
+        visible: false,
+        position: -100 // Start off-screen to the left
+      }));
+    
+    return textLines;
+  };
+
+  // Animate the lines in an assistant message
+  const animateLines = (messageId: string, lines: Array<{text: string, visible: boolean, position: number}>) => {
+    animationTimersRef.current.forEach(timer => clearTimeout(timer));
+    animationTimersRef.current = [];
+    
+    lines.forEach((line, index) => {
+      // Animate line appearance with staggered timing
+      const appearTimer = setTimeout(() => {
+        setMessages(prev => {
+          const updatedMessages = [...prev];
+          const messageIndex = updatedMessages.findIndex(msg => msg.id === messageId);
+          
+          if (messageIndex !== -1 && updatedMessages[messageIndex].lines) {
+            updatedMessages[messageIndex].lines![index].visible = true;
+            
+            // Animate position from left to center
+            const positionTimer = setInterval(() => {
+              setMessages(current => {
+                const currentMessages = [...current];
+                const msgIndex = currentMessages.findIndex(msg => msg.id === messageId);
+                
+                if (msgIndex !== -1 && currentMessages[msgIndex].lines && 
+                    currentMessages[msgIndex].lines![index].position < 0) {
+                  currentMessages[msgIndex].lines![index].position += 5;
+                  
+                  if (currentMessages[msgIndex].lines![index].position >= 0) {
+                    currentMessages[msgIndex].lines![index].position = 0;
+                    clearInterval(positionTimer);
+                    
+                    // After showing for some time, animate out to the right
+                    const disappearTimer = setTimeout(() => {
+                      const exitInterval = setInterval(() => {
+                        setMessages(latest => {
+                          const latestMessages = [...latest];
+                          const latestMsgIndex = latestMessages.findIndex(msg => msg.id === messageId);
+                          
+                          if (latestMsgIndex !== -1 && latestMessages[latestMsgIndex].lines) {
+                            latestMessages[latestMsgIndex].lines![index].position += 5;
+                            
+                            if (latestMessages[latestMsgIndex].lines![index].position > 100) {
+                              // Once offscreen, make it reappear from the left
+                              latestMessages[latestMsgIndex].lines![index].position = -100;
+                              clearInterval(exitInterval);
+                            }
+                          }
+                          return latestMessages;
+                        });
+                      }, 50);
+                      
+                      animationTimersRef.current.push(window.setTimeout(() => clearInterval(exitInterval), 10000));
+                    }, 5000 + Math.random() * 3000); // Random time before exiting
+                    
+                    animationTimersRef.current.push(disappearTimer);
+                  }
+                }
+                return currentMessages;
+              });
+            }, 50);
+            
+            animationTimersRef.current.push(window.setTimeout(() => clearInterval(positionTimer), 10000));
+          }
+          return updatedMessages;
+        });
+      }, 500 + index * 800); // Staggered appearance
+      
+      animationTimersRef.current.push(appearTimer);
+    });
+  };
 
   // Sky colors based on scroll percentage (0% = sunrise, 50% = midday, 100% = sunset)
   const getSkyGradient = () => {
@@ -121,7 +214,6 @@ export default function Home() {
       const response = await fetch('/api/speech', {
         method: 'POST',
         body: formData,
-        // Don't set Content-Type header - let the browser set it with the boundary
       });
 
       if (!response.ok) {
@@ -198,16 +290,23 @@ export default function Home() {
       }
 
       const assistantMessage = await response.json();
+      const lines = processAssistantMessage(assistantMessage.content);
       
-      setMessages(prev => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: assistantMessage.content,
-          timestamp: Date.now(),
-          id: `assistant-${Date.now()}`
-        }
-      ]);
+      const newAssistantMessage: Message = {
+        role: 'assistant',
+        content: assistantMessage.content,
+        timestamp: Date.now(),
+        id: `assistant-${Date.now()}`,
+        lines: lines
+      };
+      
+      setMessages(prev => [...prev, newAssistantMessage]);
+      
+      // Start animating the lines after a brief delay
+      setTimeout(() => {
+        animateLines(newAssistantMessage.id, lines);
+      }, 500);
+      
     } catch (error) {
       console.error('Error getting completion:', error);
       setMessages(prev => [
@@ -295,15 +394,35 @@ export default function Home() {
                       message.role === 'user' ? 'items-end' : 'items-start'
                     }`}
                   >
-                    <div
-                      className={`rounded-2xl p-4 ${
-                        message.role === 'user'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap">{message.content}</p>
-                    </div>
+                    {message.role === 'user' ? (
+                      <div className="rounded-2xl p-4 bg-blue-500 text-white">
+                        <p className="whitespace-pre-wrap">{message.content}</p>
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl p-4 bg-gray-100 text-gray-800 min-h-[60px] min-w-[200px]">
+                        {/* Animated text for assistant messages */}
+                        {message.lines ? (
+                          <div className="relative overflow-hidden h-full">
+                            {message.lines.map((line, idx) => (
+                              <div 
+                                key={idx}
+                                className="transition-all duration-500 absolute whitespace-pre-wrap"
+                                style={{
+                                  opacity: line.visible ? 1 : 0,
+                                  transform: `translateX(${line.position}%)`,
+                                  top: `${idx * 28}px`,
+                                  width: '100%'
+                                }}
+                              >
+                                {line.text}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="whitespace-pre-wrap">{message.content}</p>
+                        )}
+                      </div>
+                    )}
                     
                     {message.role === 'assistant' && (
                       <button
