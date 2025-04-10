@@ -7,7 +7,7 @@ import { Mic, Send } from 'lucide-react';
 export default function Home() {
   // State declarations
   const [messages, setMessages] = useState([
-    { id: uuidv4(), role: 'assistant', content: 'Hello! I am DoubleHarmony, your AI poetry assistant. How can I help you today?' }
+    { id: uuidv4(), role: 'assistant', content: 'I am Doule Harmony I make poems' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -43,25 +43,30 @@ export default function Home() {
     }
   };
 
-  const handleSendMessage = () => {
-    if (input.trim() === '' && !isRecording) return;
-    
-    const userMessage = { id: uuidv4(), role: 'user', content: input };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
-    
-    // Simulate API response
-    setTimeout(() => {
-      const botReply = { 
-        id: uuidv4(), 
-        role: 'assistant', 
-        content: 'This is a placeholder response. Replace with your actual API call to get responses.' 
-      };
+const handleSendMessage = () => {
+  if (input.trim() === '' && !isRecording) return;
+
+  const userMessage = { id: uuidv4(), role: 'user', content: input };
+  setMessages((prev) => [...prev, userMessage]);
+  setInput('');
+  setIsLoading(true);
+
+  // Simulate API response
+  setTimeout(() => {
+    try {
+      const botReply = { id: uuidv4(), role: 'assistant', content: PLACEHOLDER_RESPONSE };
       setMessages((prev) => [...prev, botReply]);
+    } catch (error) {
+      console.error('Error fetching response:', error);
+      setMessages((prev) => [
+        ...prev,
+        { id: uuidv4(), role: 'assistant', content: 'Something went wrong. Please try again.' },
+      ]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
-  };
+    }
+  }, 1000);
+};
 
   const startRecording = () => {
     setIsRecording(true);
