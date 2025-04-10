@@ -2,25 +2,30 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { MicrophoneIcon, SendIcon } from 'lucide-react';
+import { Mic as MicrophoneIcon, Send as SendIcon } from 'lucide-react';
 
 export default function Home() {
+  // State declarations
   const [messages, setMessages] = useState([
     { id: uuidv4(), role: 'assistant', content: 'Hello! I am DoubleHarmony, your AI poetry assistant. How can I help you today?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  
+  // Refs
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
 
+  // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
-  const getSkyGradient = () => {
+  // Function to get sky gradient based on time of day
+  function getSkyGradient() {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 8) {
       // Dawn
@@ -35,65 +40,46 @@ export default function Home() {
       // Night
       return 'linear-gradient(to bottom, #0f0c29, #302b63, #24243e)';
     }
-  };
+  }
 
-  const handleSendMessage = async () => {
+  // Function to handle sending messages
+  function handleSendMessage() {
     if (input.trim() === '' && !isRecording) return;
     
     const userMessage = { id: uuidv4(), role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages([...messages, userMessage]);
     setInput('');
     setIsLoading(true);
     
-    try {
-      // Simulate API call with timeout
-      setTimeout(() => {
-        const botReply = { 
-          id: uuidv4(), 
-          role: 'assistant', 
-          content: 'This is a placeholder response. Replace with your actual API call to get responses.' 
-        };
-        setMessages(prev => [...prev, botReply]);
-        setIsLoading(false);
-      }, 1000);
-      
-      // Actual API call would look something like:
-      /*
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input })
-      });
-      const data = await response.json();
-      setMessages(prev => [...prev, { id: uuidv4(), role: 'assistant', content: data.message }]);
-      */
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setMessages(prev => [...prev, { 
+    // Simulate API call
+    setTimeout(() => {
+      const botReply = { 
         id: uuidv4(), 
         role: 'assistant', 
-        content: 'Sorry, I encountered an error. Please try again.' 
-      }]);
-    } finally {
+        content: 'This is a placeholder response. Replace with your actual API call to get responses.' 
+      };
+      setMessages(prev => [...prev, botReply]);
       setIsLoading(false);
-    }
-  };
+    }, 1000);
+  }
 
-  const startRecording = () => {
+  // Functions for voice recording
+  function startRecording() {
     setIsRecording(true);
     // Add your actual recording logic here
     console.log('Started recording');
-  };
+  }
 
-  const stopRecording = () => {
+  function stopRecording() {
     setIsRecording(false);
     // Add your actual recording stop logic here
     console.log('Stopped recording');
     
     // Simulate receiving voice input
     setInput('This is voice input placeholder');
-  };
+  }
 
+  // Render the component
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: getSkyGradient() }}>
       {/* Large outline title */}
@@ -113,7 +99,7 @@ export default function Home() {
         {/* Chat messages blend into background */}
         <div className="h-[700px] flex flex-col">
           <div className="flex-1 overflow-y-auto p-4 space-y-6" ref={chatContainerRef}>
-            {messages.slice(1).map((message) => (
+            {messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -122,7 +108,7 @@ export default function Home() {
                   className={`max-w-[70%] p-3 rounded-lg transition-opacity duration-700 ${
                     message.role === 'user'
                       ? 'bg-blue-500 bg-opacity-70 text-white'
-                      : `bg-white bg-opacity-${isLoading ? '10' : '50'} text-gray-800`
+                      : 'bg-white bg-opacity-50 text-gray-800'
                   }`}
                 >
                   {message.content}
@@ -149,7 +135,7 @@ export default function Home() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') handleSendMessage();
                 }}
                 placeholder="Type a message..."
