@@ -12,10 +12,10 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  
+
   // Refs
-  const messagesEndRef = useRef(null);
-  const chatContainerRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function Home() {
   // Functions
   const getSkyGradient = () => {
     const hour = new Date().getHours();
-    
+
     if (hour >= 5 && hour < 8) {
       // Dawn
       return 'linear-gradient(to bottom, #1a1a2e, #16213e, #0f3460, #e94560)';
@@ -43,30 +43,43 @@ export default function Home() {
     }
   };
 
-const handleSendMessage = () => {
-  if (input.trim() === '' && !isRecording) return;
+  const handleSendMessage = () => {
+    if (input.trim() === '' && !isRecording) return;
 
-  const userMessage = { id: uuidv4(), role: 'user', content: input };
-  setMessages((prev) => [...prev, userMessage]);
-  setInput('');
-  setIsLoading(true);
+    const userMessage = { id: uuidv4(), role: 'user', content: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
 
-  // Simulate API response
-  setTimeout(() => {
-    try {
-      const botReply = { id: uuidv4(), role: 'assistant', content: PLACEHOLDER_RESPONSE };
-      setMessages((prev) => [...prev, botReply]);
-    } catch (error) {
-      console.error('Error fetching response:', error);
-      setMessages((prev) => [
-        ...prev,
-        { id: uuidv4(), role: 'assistant', content: 'Something went wrong. Please try again.' },
-      ]);
-    } finally {
-      setIsLoading(false);
+    // Simulate API response
+    setTimeout(() => {
+      try {
+        const botReply = {
+          id: uuidv4(),
+          role: 'assistant',
+          content: generatePoem(input) // Generate a poem based on user input
+        };
+        setMessages((prev) => [...prev, botReply]);
+      } catch (error) {
+        console.error('Error fetching response:', error);
+        setMessages((prev) => [
+          ...prev,
+          { id: uuidv4(), role: 'assistant', content: 'Something went wrong. Please try again.' },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 1000);
+  };
+
+  const generatePoem = (prompt: string) => {
+    // Placeholder logic for generating a poem
+    if (prompt.trim() === '') {
+      return 'Roses are red, violets are blue, I create poems, just for you!';
+    } else {
+      return `Here is a personalized poem based on "${prompt}":\n\nThe stars align, the words take flight,\nInspired by your thought so bright.`;
     }
-  }, 1000);
-};
+  };
 
   const startRecording = () => {
     setIsRecording(true);
@@ -76,7 +89,7 @@ const handleSendMessage = () => {
   const stopRecording = () => {
     setIsRecording(false);
     console.log('Stopped recording');
-    setInput('This is voice input placeholder');
+    setInput('This is voice input placeholder'); // Replace this with actual voice input logic
   };
 
   // Component rendering
@@ -84,17 +97,19 @@ const handleSendMessage = () => {
     <div className="min-h-screen relative overflow-hidden" style={{ background: getSkyGradient() }}>
       {/* Title header */}
       <div className="absolute top-4 left-0 right-0 text-center z-20">
-        <h1 className="font-sans font-bold text-[10vw] tracking-wide"
-            style={{
-              color: 'transparent',
-              WebkitTextStroke: '2px white',
-              textShadow: '0 4px 8px rgba(0,0,0,0.2)',
-              fontFamily: 'Helvetica, Arial, sans-serif'
-            }}>
+        <h1
+          className="font-sans font-bold text-[10vw] tracking-wide"
+          style={{
+            color: 'transparent',
+            WebkitTextStroke: '2px white',
+            textShadow: '0 4px 8px rgba(0,0,0,0.2)',
+            fontFamily: 'Helvetica, Arial, sans-serif'
+          }}
+        >
           DOUBLE HARMONY
         </h1>
       </div>
-  
+
       <div className="container mx-auto max-w-4xl px-4 py-8 relative z-10 mt-24">
         {/* Chat container */}
         <div className="h-[700px] flex flex-col">
@@ -117,7 +132,7 @@ const handleSendMessage = () => {
             ))}
             <div ref={messagesEndRef} />
           </div>
-  
+
           {/* Input area */}
           <div className="p-4 border-t border-white border-opacity-20 bg-transparent">
             <div className="flex items-center space-x-2">
@@ -140,7 +155,7 @@ const handleSendMessage = () => {
                   if (e.key === 'Enter') handleSendMessage();
                 }}
                 placeholder="Type a message..."
-                className="flex-1 py-2 px-4 border border-white border-opacity-30 bg-white bg-opacity-30 backdrop-blur-sm rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 placeholder-gray-500"
+                className="flex-1 py-2 px-4 border border-white border-opacity-30 bg-white bg-opacity-30 backdrop-blur-sm rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
                 disabled={isLoading || isRecording}
               />
               <button
