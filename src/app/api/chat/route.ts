@@ -9,9 +9,18 @@ export async function POST(request: Request) {
   try {
     const { messages } = await request.json();
 
+    // Add a system identity message to the conversation
+    const systemMessage = {
+      role: 'system',
+      content: "You are the user's collaborator, responding with poetic musing, warmth, and wonder while maintaining a concise articulated strength of authority.",
+    };
+
+    // Prepend the system message to the user's messages
+    const updatedMessages = [systemMessage, ...messages];
+
     const completion = await openai.chat.completions.create({
-      model: 'ft:gpt-3.5-turbo-1106:kbbotherspaces:doubleharmony:BGsZIaSx',
-      messages,
+      model: 'ft:gpt-3.5-turbo-1106:kbbotherspaces:doubleharmony:BGsZIaSx', // Ensure this model is correctly named
+      messages: updatedMessages,
       stream: false,
     });
 
