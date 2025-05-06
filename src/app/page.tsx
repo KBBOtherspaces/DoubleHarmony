@@ -7,7 +7,7 @@ import { Mic, Send } from 'lucide-react';
 export default function Home() {
   // State declarations
   const [messages, setMessages] = useState([
-    { id: uuidv4(), role: 'assistant', content: 'I am Doule Harmony I make poems' }
+    { id: uuidv4(), role: 'assistant', content: 'I am Double Harmony. I create poems.' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
