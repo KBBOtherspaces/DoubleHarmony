@@ -57,7 +57,7 @@ export default function Home() {
         const botReply = {
           id: uuidv4(),
           role: 'assistant',
-          content: generatePoem(input) // Generate a poem based on user input
+          content: generatePoem(input) // Generate a poem as a response to users input.
         };
         setMessages((prev) => [...prev, botReply]);
       } catch (error) {
@@ -100,7 +100,7 @@ export default function Home() {
         <h1
           className="font-sans font-bold text-[10vw] tracking-wide"
           style={{
-            color: 'transparent',
+            color: 'white',
             WebkitTextStroke: '2px white',
             textShadow: '0 4px 8px rgba(0,0,0,0.2)',
             fontFamily: 'Helvetica, Arial, sans-serif'
