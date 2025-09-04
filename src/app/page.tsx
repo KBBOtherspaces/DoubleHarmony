@@ -103,10 +103,10 @@ export default function Home() {
             color: 'white',
             WebkitTextStroke: '2px white',
             textShadow: '0 4px 8px rgba(0,0,0,0.2)',
-            fontFamily: 'Helvetica, Arial, sans-serif'
+            fontFamily: 'Helvetica, Arial, sans-serif, all lowercase'
           }}
         >
-          DOUBLE HARMONY
+          Double Harmony
         </h1>
       </div>
 
